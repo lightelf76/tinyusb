@@ -111,8 +111,12 @@
 #elif CFG_TUSB_MCU == OPT_MCU_CH32V307
   #include <ch32v30x.h>
   #define USBHD_IRQn OTG_FS_IRQn
-#elif CFG_TUSB_MCU == OPT_MCU_CH583
-  #include "CH58x_common.h"
+#elif CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH579
+  #if CFG_TUSB_MCU == OPT_MCU_CH583
+    #include "CH58x_common.h"
+  #else
+    #include "CH57x_common.h"
+  #endif
   // CH582/583 USBFS device controller: same combined per-endpoint control register as
   // CH32V103 (IN response bits[1:0], OUT response bits[3:2]) but a different register map -
   // the EP control/length block sits lower (EP0_CTRL @ +0x22), EP5-7 are split out, EP4

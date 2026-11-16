@@ -29,7 +29,7 @@
 
   // Struct-based EP register access (uniform layout). CH58X has a different register map and
   // defines EP_DMA/EP_TX_LEN/EP_CTRL itself in ch32_usbfs_reg.h.
-  #if CFG_TUSB_MCU == OPT_MCU_CH583
+  #if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH579
     // CH58X EP registers split into a low block (EP0-4) and a high block (EP5-7). Walk from each
     // block's first slot by the 4-byte slot stride (pointer arithmetic off slot 0, so the unused
     // ternary branch's index can't trip -Warray-bounds). EP4 has no DMA register of its own (it
@@ -306,7 +306,7 @@ static void update_in(uint8_t rhport, uint8_t ep, bool force) {
   if (xfer->valid) {
     if (force || xfer->len) {
       size_t len = TU_MIN(xfer->max_size, xfer->len);
-#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH32X035
+#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH32X035 || CFG_TUSB_MCU == OPT_MCU_CH579
       // Every CH58x/X035 endpoint buffer is 64 bytes; cap the copy so a bad iso mps cannot write
       // past the buffer into a neighbouring endpoint's.
       len = TU_MIN(len, 64u);
@@ -346,7 +346,7 @@ static void update_out(uint8_t rhport, uint8_t ep, size_t rx_len) {
   struct usb_xfer *xfer = &data.xfer[ep][TUSB_DIR_OUT];
   if (xfer->valid) {
     size_t len = TU_MIN(xfer->max_size, TU_MIN(xfer->len, rx_len));
-#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH32X035
+#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH32X035 || CFG_TUSB_MCU == OPT_MCU_CH579
     len = TU_MIN(len, 64u); // cap to the 64-byte EP buffer (see update_in)
 #endif
     memcpy(xfer->buffer, ep_out_buf(ep), len);
@@ -401,6 +401,8 @@ bool dcd_init(uint8_t rhport, const tusb_rhport_init_t *rh_init) {
 #if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH32X035
   // CH58X: a single mode register enables EP5/6/7 RX+TX (different bit layout than CH32).
   USBOTG_FS->UEP567_MOD = 0x3F;
+#elif CFG_TUSB_MCU == OPT_MCU_CH579
+  // CH579: only 5 endpoints, so do nothing there
 #else
   USBOTG_FS->UEP5_6_MOD = 0xCC;
   USBOTG_FS->UEP7_MOD   = 0x0C;
@@ -488,7 +490,7 @@ void dcd_int_handler(uint8_t rhport) {
 
     USBOTG_FS->INT_FG = USBFS_INT_FG_BUS_RST;
   } else if (status & USBFS_INT_FG_SUSPEND) {
-#if CFG_TUSB_MCU == OPT_MCU_CH583
+#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH579
     // CH58x raises this single interrupt for both suspend and resume; MIS_ST's suspend bit tells
     // them apart (set while suspended, clear once resumed) so tud_resume_cb() actually fires.
     dcd_event_t event = {.rhport = rhport,
@@ -542,7 +544,7 @@ void dcd_edpt0_status_complete(uint8_t rhport, const tusb_control_request_t *req
   (void)rhport;
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE &&
       request->bmRequestType_bit.type == TUSB_REQ_TYPE_STANDARD && request->bRequest == TUSB_REQ_SET_ADDRESS) {
-#if CFG_TUSB_MCU == OPT_MCU_CH583
+#if CFG_TUSB_MCU == OPT_MCU_CH583 || CFG_TUSB_MCU == OPT_MCU_CH579
     // On CH58x R8_USB_DEV_AD bit 7 is a user general-purpose flag; only bits [6:0] are the address.
     USBOTG_FS->DEV_ADDR = (uint8_t)((USBOTG_FS->DEV_ADDR & 0x80u) | (request->wValue & 0x7Fu));
 #else

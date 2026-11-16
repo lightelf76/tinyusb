@@ -179,6 +179,7 @@
 #define OPT_MCU_CH32V103         2230 ///< WCH CH32V103
 #define OPT_MCU_CH583            2240 ///< WCH CH583
 #define OPT_MCU_CH582            OPT_MCU_CH583 ///< WCH CH582 (alias, same USB IP as CH583)
+#define OPT_MCU_CH579            2242 ///< WCH CH579 ARM CM0 (same USB IP as CH583, but only 5 EPs)
 #define OPT_MCU_CH32X035         2250 ///< WCH CH32X035
 #define OPT_MCU_CH32V4X7         2280 ///< WCH CH32V407, CH32V467
 

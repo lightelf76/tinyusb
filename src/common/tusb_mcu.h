@@ -688,6 +688,20 @@
 
   #define TUP_DCD_ENDPOINT_MAX 8
 
+#elif TU_CHECK_MCU(OPT_MCU_CH579)
+  // CH579 USBFS: older WCH USBFS IP with a single combined per-endpoint control register
+  // (like CH32V103), driven by the shared dcd_ch32_usbfs.c on USB0 (rhport 0). Device only:
+  // the shared hcd_ch32_usbfs.c is CH32V20x-specific and does not support CH579, so host 
+  // is not provided here.
+  #define TUP_USBIP_WCH_USBFS
+  #define TUP_USBD_XFER_ISR 0
+
+  #ifndef CFG_TUD_WCH_USBIP_USBFS
+    #define CFG_TUD_WCH_USBIP_USBFS 1
+  #endif
+
+  #define TUP_DCD_ENDPOINT_MAX 5
+
 #elif TU_CHECK_MCU(OPT_MCU_CH32V4X7)
   // Two WCH HS2 controllers with built-in HS PHY: rhport 0 = USBHS1, rhport 1 = USBHS2 (instances, not IP versions)
   #define TUP_USBIP_WCH_HS2
